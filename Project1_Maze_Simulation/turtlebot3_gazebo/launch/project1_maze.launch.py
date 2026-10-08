@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 #
 # MTRX3760 Project 1 - TurtleBot3 maze launch file
-# SID: 510516950
+# 
+# Written by SID: 510516950
+# Written by SID: 530506519
+# Written by SID: 530504205
+# Written by SID: 530506519
+# Written by SID: 530478283
 #
 # Purpose:
 #   Starts the Project 1 SDF world in Gazebo Harmonic, spawns the selected
