@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # MTRX3760 Project 1 - physical TurtleBot3 launch file (no Gazebo)
-# SID: 510516950
+# Written by SID: 530504205
 #
 # Purpose:
 #   Starts the team's LidarNode + Navigator + WheelController against a REAL
