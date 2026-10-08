@@ -9,39 +9,28 @@
 #ifndef NAVIGATOR_HPP
 #define NAVIGATOR_HPP
 
-#include <cstdint>
-#include <cmath>
-#include <algorithm>
-
-// Controller mode, chosen afresh on every control tick by Navigator::getState()
-typedef enum {
-    WAIT_FOR_SCAN = 0,  // no lidar data received yet - hold still
-    FOLLOW_WALL   = 1,  // tracking the closest point on the right-hand side
-    SEARCH_WALL   = 2   // nothing within WALL_LOST_DISTANCE - arc right until something appears
-} TB3State;
-
 // Robot pose in the odometry frame: x, y in metres, yaw in radians anticlockwise from +x
-typedef struct {
+struct Pose {
     double x   = 0.0;
     double y   = 0.0;
     double yaw = 0.0;
-} Pose;
+};
 
 // Body velocity: linear in m/s (+ve forward), angular in rad/s (+ve anticlockwise = left turn)
-typedef struct {
+struct CommandVelocity {
     double linear  = 0.0;
     double angular = 0.0;
-} CommandVelocity;
+};
 
 // What the navigator needs from one lidar scan
 // tilt_angle is 0 when the closest right-hand point is square to the right and
 // -ve when the robot is heading toward the wall
 // The defaults sit beyond WALL_LOST_DISTANCE, so an unset input reads as "no wall"
-typedef struct {
+struct WallFollowerInput {
     double front_distance = 10.0;  // m - closest return in the forward cone
     double right_distance = 10.0;  // m - closest return in the right-hand sector
     double tilt_angle     = 0.0;   // rad
-} WallFollowerInput;
+};
 
 //---Navigator Interface-------------------------------------------------------
 // Navigator is the right-hand wall follower. It contains no ROS code: its owner
@@ -54,8 +43,7 @@ typedef struct {
 // front_distance is not carried forward - it keeps its last scanned value.
 class Navigator {
     public:
-        Navigator();
-        ~Navigator() = default;
+        Navigator() = default;
 
         // Stores the latest odometry pose. Call on every odometry update.
         void updatePose(const Pose& pose);
@@ -70,11 +58,14 @@ class Navigator {
         // first updateInput().
         CommandVelocity navigate();
 
-        // Laps completed. A lap is going further than START_ZONE_RADIUS from the
-        // odometry origin and then coming back within END_ZONE_RADIUS of it.
-        int getLapCount() const { return mLapCount; }
-
     private:
+        // Controller mode, chosen afresh on every control tick by getState()
+        enum TB3State {
+            WAIT_FOR_SCAN,  // no lidar data received yet - hold still
+            FOLLOW_WALL,    // tracking the closest point on the right-hand side
+            SEARCH_WALL     // nothing within WALL_LOST_DISTANCE - arc right until something appears
+        };
+
         // wall following
         static constexpr double TARGET_DISTANCE    = 0.15;  // m - lidar range to the wall to hold
         static constexpr double K_DIST             = 7.0;   // rad of approach angle per m of error
@@ -122,6 +113,12 @@ class Navigator {
         // acceleration and returns the result
         CommandVelocity rampCommand(const CommandVelocity& target);
 
+        // Keeps an angle in [-pi, pi] so differences never jump by 2*pi
+        static double wrapAngle(double angle);
+
+        // Readable state name for the state change log
+        static const char* stateName(TB3State state);
+
         // inputs
         WallFollowerInput mInput;       // most recent lidar reading
         Pose mCurrentPose;
@@ -135,7 +132,7 @@ class Navigator {
 
         // lap counting
         bool mHasLeftStart = false;     // true once beyond START_ZONE_RADIUS on the current lap
-        int  mLapCount     = 0;
+        int  mLapCount     = 0;         // laps completed - reported in the lap log only
 };
 
 #endif

@@ -11,24 +11,18 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <chrono>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 //---NavigatorWrapper Implementation-------------------------------------------
 NavigatorWrapper::NavigatorWrapper()
-    : Node("turtlebot3_navigator_node")
+    : Node("turtlebot3_navigator")
 {
-    last_processed_update_ = this->now();
-
     cmd_vel_pub_ = create_publisher<geometry_msgs::msg::TwistStamped>("/nav_cmd_vel", 10);
 
     // LidarNode publishes /lidar best effort - a reliable subscription would never connect to it
     rclcpp::QoS lidar_qos(10);
     lidar_qos.best_effort();
-    partner_lidar_sub_ = create_subscription<turtlebot3_lidar_processing::msg::Lidar>(
+    lidar_sub_ = create_subscription<turtlebot3_lidar_processing::msg::Lidar>(
         "/lidar", lidar_qos,
-        std::bind(&NavigatorWrapper::ProcessedLidarCallback, this, std::placeholders::_1));
+        std::bind(&NavigatorWrapper::lidarCallback, this, std::placeholders::_1));
 
     odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
         "/odom", 10,
@@ -41,19 +35,21 @@ NavigatorWrapper::NavigatorWrapper()
         std::chrono::milliseconds(50),
         std::bind(&NavigatorWrapper::updateCallback, this));
 
-    RCLCPP_INFO(get_logger(), "Turtlebot3 Navigator Node Started (with Fallback Active)");
+    RCLCPP_INFO(get_logger(), "Turtlebot3 Navigator Node Started");
 }
 
 // LidarNode publishes once per scan - every message here is a fresh measurement
 // handed straight to the navigator. The navigator pairs it with the pose from the
 // last /odom message received, not the pose at the instant of the scan.
-void NavigatorWrapper::ProcessedLidarCallback(const turtlebot3_lidar_processing::msg::Lidar::SharedPtr msg) {
+// As in odomCallback, the reading is built before the lock is taken.
+void NavigatorWrapper::lidarCallback(const turtlebot3_lidar_processing::msg::Lidar::SharedPtr msg) {
+    WallFollowerInput input;
+    input.front_distance = msg->forward_wall_distance;
+    input.right_distance = msg->right_wall_distance;
+    input.tilt_angle = msg->tilt;
+
     std::lock_guard<std::mutex> lock(data_mutex_);
-    mInput.front_distance = msg->forward_wall_distance;
-    mInput.right_distance = msg->right_wall_distance;
-    mInput.tilt_angle = msg->tilt;
-    navigator_.updateInput(mInput);
-    last_processed_update_ = this->now();
+    navigator_.updateInput(input);
 }
 
 // Only yaw is kept from the /odom quaternion - the robot is assumed to stay flat.
@@ -68,7 +64,9 @@ void NavigatorWrapper::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg
         msg->pose.pose.orientation.x, msg->pose.pose.orientation.y,
         msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
     tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
+    double roll  = 0.0;
+    double pitch = 0.0;
+    double yaw   = 0.0;
     m.getRPY(roll, pitch, yaw);
     pose.yaw = yaw;
 
@@ -80,7 +78,7 @@ void NavigatorWrapper::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg
 void NavigatorWrapper::updateCallback() {
     std::lock_guard<std::mutex> lock(data_mutex_);
 
-    CommandVelocity cmd = navigator_.navigate();
+    const CommandVelocity cmd = navigator_.navigate();
     publishCmdVel(cmd.linear, cmd.angular);
 }
 
@@ -88,7 +86,7 @@ void NavigatorWrapper::updateCallback() {
 // the wheel controller clamps it and forwards it to /cmd_vel
 void NavigatorWrapper::publishCmdVel(double linear, double angular) {
     geometry_msgs::msg::TwistStamped msg;
-    msg.header.stamp = this->now();
+    msg.header.stamp = now();
     msg.header.frame_id = "base_link";
     msg.twist.linear.x  = linear;
     msg.twist.angular.z = angular;

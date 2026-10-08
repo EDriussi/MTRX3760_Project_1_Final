@@ -14,7 +14,7 @@
 //---CameraNode Interface------------------------------------------------------
 // CameraNode subscribes to the raw camera images on /camera/image_raw and
 // republishes each one unchanged on /image. The images are not used for steering.
-class CameraNode : public rclcpp::Node 
+class CameraNode : public rclcpp::Node
 {
     public:
         CameraNode();

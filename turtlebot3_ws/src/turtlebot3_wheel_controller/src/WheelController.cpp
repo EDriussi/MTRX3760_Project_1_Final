@@ -6,18 +6,18 @@
 // wheel_controller_node executable.
 //-----------------------------------------------------------------------------
 
+#include "WheelController.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <functional>
 #include <memory>
 
-#include "WheelController.hpp"
-
 
 //---WheelController Implementation--------------------------------------------
 
 WheelController::WheelController()
-    : Node("WheelController")
+    : Node("wheel_controller")
 {
     // Select the velocity message type expected by the robot bringup.
     // The default is TwistStamped; set the parameter false for plain Twist.
@@ -102,23 +102,21 @@ void WheelController::CommandCallback(
 
 void WheelController::WatchdogCallback()
 {
-    if (!mHasCommand || mTimedOut)
+    if (mHasCommand && !mTimedOut)
     {
-        return;
-    }
+        const double TimeSinceLastCommand =
+            (get_clock()->now() - mLastCommandTime).seconds();
 
-    const double TimeSinceLastCommand =
-        (get_clock()->now() - mLastCommandTime).seconds();
+        if (TimeSinceLastCommand > CommandTimeout)
+        {
+            RCLCPP_WARN(
+                get_logger(),
+                "No navigator command for %.1f s - stopping wheels.",
+                CommandTimeout);
 
-    if (TimeSinceLastCommand > CommandTimeout)
-    {
-        RCLCPP_WARN(
-            get_logger(),
-            "No navigator command for %.1f s - stopping wheels.",
-            CommandTimeout);
-
-        SetWheelSpeed(0.0, 0.0);
-        mTimedOut = true;
+            SetWheelSpeed(0.0, 0.0);
+            mTimedOut = true;
+        }
     }
 }
 
