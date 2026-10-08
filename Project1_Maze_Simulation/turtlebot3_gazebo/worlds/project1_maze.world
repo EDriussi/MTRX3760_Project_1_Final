@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!--
   MTRX3760 Project 1 - TurtleBot3 maze world
+  Written by SID: 510516950
 
   Purpose:
     Provides a reproducible Gazebo Harmonic test environment for the Project 1
