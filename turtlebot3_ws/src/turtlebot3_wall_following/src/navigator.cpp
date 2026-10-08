@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // navigator.cpp
 //
-// SID: 510516950
+// Written by SID: 530478283
+//
+// Edited and cleaned by SID: 510516950
 // Implements Navigator: carrying the last lidar reading forward with odometry,
 // choosing the controller state, the wall-following control law and the
 // acceleration limit on its output.

@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // navigator_wrapper.hpp
 //
-// SID: 510516950
+// Written by SID: 530504205
+//
+// Edited and cleaned by SID: 510516950
 // Declares NavigatorWrapper, the ROS 2 node that connects a Navigator to the
 // rest of the system.
 //-----------------------------------------------------------------------------
