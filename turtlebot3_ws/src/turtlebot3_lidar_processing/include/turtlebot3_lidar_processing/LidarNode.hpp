@@ -2,7 +2,8 @@
 // LidarNode.hpp
 //
 // Written by SID: 530506519
-// Editted and updated by SID: 510516950 
+//
+// Edited and cleaned by SID: 510516950
 // Declares LidarNode, the ROS 2 node that reduces each raw laser scan to the
 // three values the wall follower steers on.
 //-----------------------------------------------------------------------------

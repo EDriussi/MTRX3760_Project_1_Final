@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // LidarNode.cpp
 //
-// SID: 510516950
+// Written by SID: 530506519
+//
+// Edited and cleaned by SID: 510516950
 // Implements LidarNode and the main() that runs it as the lidar executable.
 //-----------------------------------------------------------------------------
 

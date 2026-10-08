@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // WheelController.hpp
 //
-// SID: 510516950
+// Written by SID: 530489485
+//
+// Edited and cleaned by SID: 510516950
 // Declares WheelController, the node that is the final connection between the
 // navigation system and the TurtleBot3.
 //

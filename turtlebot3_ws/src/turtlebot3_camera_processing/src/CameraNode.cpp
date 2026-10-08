@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // CameraNode.cpp
 //
-// SID: 510516950
+// Written by SID: 540754575
+//
+// Edited and cleaned by SID: 510516950
 // Implements CameraNode and the main() that runs it as the camera_node
 // executable.
 //-----------------------------------------------------------------------------

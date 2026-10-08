@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // CameraNode.hpp
 //
-// SID: 510516950
+// Written by SID: 540754575
+//
+// Edited and cleaned by SID: 510516950
 // Declares CameraNode, the ROS 2 node that relays the robot's camera images.
 //-----------------------------------------------------------------------------
 

@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // WheelController.cpp
 //
-// SID: 510516950
+// Written by SID: 530489485
+//
+// Edited and cleaned by SID: 510516950
 // Implements WheelController and the main() that runs it as the
 // wheel_controller_node executable.
 //-----------------------------------------------------------------------------

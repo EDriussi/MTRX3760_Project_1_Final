@@ -1,7 +1,9 @@
 //-----------------------------------------------------------------------------
 // navigator.hpp
 //
-// SID: 510516950
+// Written by SID: 530478283
+//
+// Edited and cleaned by SID: 510516950
 // Declares Navigator, the right-hand wall-following controller, and the plain
 // data types passed into and out of it. Nothing in this file depends on ROS.
 //-----------------------------------------------------------------------------
