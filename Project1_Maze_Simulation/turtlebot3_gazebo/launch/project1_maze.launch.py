@@ -5,7 +5,6 @@
 # Written by SID: 510516950
 # Written by SID: 530506519
 # Written by SID: 530504205
-# Written by SID: 530506519
 # Written by SID: 530478283
 #
 # Purpose:
