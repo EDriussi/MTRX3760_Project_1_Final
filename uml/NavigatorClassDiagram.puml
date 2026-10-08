@@ -1,0 +1,40 @@
+' NavigatorClassDiagram.puml
+' Written by SID: 510516950
+' Simplified UML class diagram for the navigation executable
+' (turtlebot3_navigator).
+' Association, inheritance and composition only; no members or functions.
+' WallFollowerInput is held by value by both NavigatorWrapper and Navigator.
+
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+' Draw Subscriber<Lidar> as plain text, not as a template corner box.
+skinparam genericDisplay old
+left to right direction
+
+class NavigatorWrapper
+class Node
+class Navigator
+class WallFollowerInput
+class Pose
+class CommandVelocity
+class "Subscriber<Lidar>" as SubLidar
+class "Subscriber<Odometry>" as SubOdometry
+class "Publisher<TwistStamped>" as PubTwistStamped
+class TimerBase
+
+Node <|-- NavigatorWrapper
+
+NavigatorWrapper *-- Navigator
+NavigatorWrapper *-- WallFollowerInput
+NavigatorWrapper *-- SubLidar
+NavigatorWrapper *-- SubOdometry
+NavigatorWrapper *-- PubTwistStamped
+NavigatorWrapper *-- TimerBase
+
+Navigator *-- WallFollowerInput
+Navigator *-- Pose
+Navigator *-- CommandVelocity
+
+@enduml

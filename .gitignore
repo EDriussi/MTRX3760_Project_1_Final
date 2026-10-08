@@ -1,0 +1,93 @@
+#Ignore local builds in workspace folder
+turtlebot3_ws/build/
+turtlebot3_ws/install/
+turtlebot3_ws/log/
+
+# colcon also creates install/ and log/ in whatever folder it's run from
+# (repo root, Project1_Maze_Simulation, ...) - never commit them
+install/
+log/
+
+# macOS Finder metadata
+.DS_Store
+
+# VS Code folders anywhere in the repo (".vscode/*" further down only matches
+# the repo root, so turtlebot3_ws/src/.vscode was showing up as untracked)
+**/.vscode/
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+*.so.*
+
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Build directories
+build/
+Build/
+build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+
+# vcpkg
+vcpkg_installed/
+
+# debug information files
+*.dwo
+
+# test output & cache
+Testing/
+.cache/
+
+# Ignore the entire VS Code folder by default
+.vscode/*
+
+# Always ignore these specific local files
+.vscode/launch.json
+.vscode/tasks.json

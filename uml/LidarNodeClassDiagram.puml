@@ -1,0 +1,25 @@
+' LidarNodeClassDiagram.puml
+' Written by SID: 510516950
+' Simplified UML class diagram for the LiDAR-processing executable (lidar).
+' Association, inheritance and composition only; no members or functions.
+' WallTelemetry is a struct nested inside LidarNode and is not drawn.
+
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+' Draw Subscriber<LaserScan> as plain text, not as a template corner box.
+skinparam genericDisplay old
+left to right direction
+
+class LidarNode
+class Node
+class "Subscriber<LaserScan>" as SubLaserScan
+class "Publisher<Lidar>" as PubLidar
+
+Node <|-- LidarNode
+
+LidarNode *-- SubLaserScan
+LidarNode *-- PubLidar
+
+@enduml

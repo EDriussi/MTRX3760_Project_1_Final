@@ -1,0 +1,3 @@
+float32 tilt
+float32 forward_wall_distance
+float32 right_wall_distance

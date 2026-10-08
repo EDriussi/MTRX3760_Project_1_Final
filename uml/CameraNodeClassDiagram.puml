@@ -1,0 +1,24 @@
+' CameraNodeClassDiagram.puml
+' Written by SID: 510516950
+' Simplified UML class diagram for the camera executable (camera_node).
+' Association, inheritance and composition only; no members or functions.
+
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+' Draw Subscriber<Image> as plain text, not as a template corner box.
+skinparam genericDisplay old
+left to right direction
+
+class CameraNode
+class Node
+class "Subscriber<Image>" as SubImage
+class "Publisher<Image>" as PubImage
+
+Node <|-- CameraNode
+
+CameraNode *-- SubImage
+CameraNode *-- PubImage
+
+@enduml

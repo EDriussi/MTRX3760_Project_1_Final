@@ -1,0 +1,11 @@
+# SimpleWalls.map - closed wall loop for MTRX3760 Lab 2 A1.
+# Coordinates use the renderer frame: x right, y down; headings are degrees.
+
+loop room
+    startpose 150 140 90
+    vertex 100 100
+    vertex 400 100
+    vertex 400 200
+    vertex 700 200
+    vertex 700 500
+    vertex 100 500

@@ -1,0 +1,31 @@
+' WheelControllerClassDiagram.puml
+' Written by SID: 510516950
+' Simplified UML class diagram for the wheel-command executable
+' (wheel_controller_node).
+' Association, inheritance and composition only; no members or functions.
+' WheelController declares both publishers but creates only one of them,
+' chosen by the use_stamped_cmd_vel parameter.
+
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+' Draw Subscriber<TwistStamped> as plain text, not as a template corner box.
+skinparam genericDisplay old
+left to right direction
+
+class WheelController
+class Node
+class "Subscriber<TwistStamped>" as SubTwistStamped
+class "Publisher<TwistStamped>" as PubTwistStamped
+class "Publisher<Twist>" as PubTwist
+class TimerBase
+
+Node <|-- WheelController
+
+WheelController *-- SubTwistStamped
+WheelController *-- PubTwistStamped
+WheelController *-- PubTwist
+WheelController *-- TimerBase
+
+@enduml

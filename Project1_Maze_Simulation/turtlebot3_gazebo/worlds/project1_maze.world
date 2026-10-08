@@ -1,0 +1,220 @@
+<?xml version="1.0"?>
+<!--
+  MTRX3760 Project 1 - TurtleBot3 maze world
+
+  Purpose:
+    Provides a reproducible Gazebo Harmonic test environment for the Project 1
+    right-wall-following controller. The geometry models a 2.00 m square maze
+    with 0.25 m high walls, a 0.40 m entrance and exit, and two boundary-
+    connected internal baffles.
+
+  Coordinate convention:
+    +x points east/right, +y points north/up and z=0 is the floor.
+    The nominal maze centre is (0, 0).
+
+  Integration:
+    Copy this file into turtlebot3_gazebo/worlds and launch it using the
+    accompanying project1_maze.launch.py file.
+-->
+<sdf version="1.6">
+  <world name="project1_maze">
+    <!-- Standard systems retained from the official Jazzy empty world. -->
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
+    </include>
+
+    <scene>
+      <shadows>false</shadows>
+    </scene>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>0 0 4.25 0 1.5708 0</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.4</sor>
+          <use_dynamic_moi_rescaling>1</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000.0</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!--
+      Each maze wall is a static link with identical collision and visual box
+      geometry. The 0.01 m simulated thickness is intentionally small while
+      remaining straightforward for collision detection.
+    -->
+    <model name="project1_maze_walls">
+      <static>true</static>
+
+      <!-- South wall: 2.00 m long. Its inner face is y=-0.990 m. -->
+      <link name="south_wall">
+        <pose>0 -0.995 0.125 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box><size>2.00 0.01 0.25</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>2.00 0.01 0.25</size></box>
+          </geometry>
+          <material>
+            <ambient>0.90 0.90 0.90 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!-- North wall: 2.00 m long. Its inner face is y=0.990 m. -->
+      <link name="north_wall">
+        <pose>0 0.995 0.125 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box><size>2.00 0.01 0.25</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>2.00 0.01 0.25</size></box>
+          </geometry>
+          <material>
+            <ambient>0.90 0.90 0.90 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!--
+        West wall: y=-0.60 to y=1.00 m.
+        The missing lower 0.40 m is the entrance.
+      -->
+      <link name="west_wall">
+        <pose>-0.995 0.20 0.125 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.01 1.60 0.25</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.01 1.60 0.25</size></box>
+          </geometry>
+          <material>
+            <ambient>0.90 0.90 0.90 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!--
+        East wall: y=-0.60 to y=1.00 m.
+        The missing lower 0.40 m is the exit.
+      -->
+      <link name="east_wall">
+        <pose>0.995 0.20 0.125 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.01 1.60 0.25</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.01 1.60 0.25</size></box>
+          </geometry>
+          <material>
+            <ambient>0.90 0.90 0.90 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!--
+        Baffle A: attached to the south wall.
+        Centre x=-0.30 m; spans y=-1.00 to y=0.40 m.
+      -->
+      <link name="internal_baffle_a">
+        <pose>-0.30 -0.30 0.125 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.01 1.40 0.25</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.01 1.40 0.25</size></box>
+          </geometry>
+          <material>
+            <ambient>0.90 0.90 0.90 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <!--
+        Baffle B: attached to the north wall.
+        Centre x=0.30 m; spans y=-0.40 to y=1.00 m.
+      -->
+      <link name="internal_baffle_b">
+        <pose>0.30 0.30 0.125 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.01 1.40 0.25</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.01 1.40 0.25</size></box>
+          </geometry>
+          <material>
+            <ambient>0.90 0.90 0.90 1</ambient>
+            <diffuse>0.90 0.90 0.90 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
