@@ -9,12 +9,13 @@
 #ifndef NAVIGATOR_WRAPPER_HPP
 #define NAVIGATOR_WRAPPER_HPP
 
+#include "navigator.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <turtlebot3_lidar_processing/msg/lidar.hpp>
 
-#include "navigator.hpp"
 #include <mutex>
 
 //---NavigatorWrapper Interface------------------------------------------------
@@ -30,7 +31,7 @@ class NavigatorWrapper : public rclcpp::Node {
 
     private:
         // passes each /lidar message to the navigator as a new reading
-        void ProcessedLidarCallback(const turtlebot3_lidar_processing::msg::Lidar::SharedPtr msg);
+        void lidarCallback(const turtlebot3_lidar_processing::msg::Lidar::SharedPtr msg);
 
         // reduces each /odom message to an x, y, yaw pose for the navigator
         void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
@@ -44,7 +45,7 @@ class NavigatorWrapper : public rclcpp::Node {
         // ROS interfaces
         rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_pub_;
 
-        rclcpp::Subscription<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr partner_lidar_sub_;
+        rclcpp::Subscription<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr lidar_sub_;
 
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
@@ -52,12 +53,8 @@ class NavigatorWrapper : public rclcpp::Node {
 
         // logic and state
         Navigator navigator_;
-        // latest /lidar message in navigator form - the navigator keeps its own copy
-        WallFollowerInput mInput;
-        // arrival time of the last /lidar message - recorded but not read anywhere
-        rclcpp::Time last_processed_update_;
 
-        // held by every callback while it touches navigator_ or mInput
+        // held by every callback while it touches navigator_
         std::mutex data_mutex_;
 };
 

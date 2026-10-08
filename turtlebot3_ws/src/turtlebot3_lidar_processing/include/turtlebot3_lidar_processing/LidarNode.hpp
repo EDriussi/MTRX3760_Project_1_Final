@@ -29,16 +29,24 @@
 class LidarNode : public rclcpp::Node {
     public:
 
+        LidarNode();
+
+    private:
+
+        // Positions in the vector returned by GetRequiredRays
+        static constexpr int ForwardRayIndex = 0;
+        static constexpr int RightDistanceIndex = 1;
+        static constexpr int RightBearingIndex = 2;
+        static constexpr int NumDesiredRays = 3;
+
         // Result of processing one scan - distances in metres, angle in radians.
         // The tilt is 0 when the closest RHS point is directly to the right and
         // negative when the robot is heading toward the wall.
         struct WallTelemetry {
-            float mTiltAngle;
-            float mDistanceToFrontWall;
-            float mDistanceToRightWall;
+            float mTiltAngle = 0.0f;
+            float mDistanceToFrontWall = 0.0f;
+            float mDistanceToRightWall = 0.0f;
         };
-
-        LidarNode();
 
         // Reduces a full lidar scan to the required values, in this order:
         // { forward distance, RHS closest distance, RHS closest bearing (rad) }
@@ -46,31 +54,25 @@ class LidarNode : public rclcpp::Node {
         // LaserScan message.
         std::vector<float> GetRequiredRays( const std::vector<float>& ranges,
                                             float angle_min, float angle_increment,
-                                            float range_min, float range_max);
+                                            float range_min, float range_max) const;
 
         // Converts the output of GetRequiredRays into the robot's tilt, the distance
-        // to the nearest forward wall and the distance to the nearest RHS wall. The
-        // result is returned and also kept as the node's current telemetry.
-        WallTelemetry CalculateTelemetry( const std::vector<float>& Rays );
+        // to the nearest forward wall and the distance to the nearest RHS wall.
+        WallTelemetry CalculateTelemetry( const std::vector<float>& Rays ) const;
 
         // Finds the index of the smallest valid ray within WindowRays either side of
         // IndexNum, wrapping around the scan. Returns -1 if no valid ray closer than
         // range_max is found.
         int GetMinimumRayIndex ( const std::vector<float>& ranges, int IndexNum,
-                                 int WindowRays, float range_min, float range_max );
+                                 int WindowRays, float range_min, float range_max ) const;
 
         // Returns a copy of the scan in which each valid ray is averaged with its
         // valid neighbours to reduce noise. Invalid rays are returned as infinity.
         std::vector<float> SmoothRays( const std::vector<float>& ranges,
-                                       float range_min, float range_max );
-
-    private:
-
-        // Telemetry calculated from the most recent scan
-        WallTelemetry mWallTelemetry;
+                                       float range_min, float range_max ) const;
 
         // Processes and publishes each scan
-        void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+        void ScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
 
         // Publishes the processed telemetry on /lidar
         rclcpp::Publisher<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr publisher_;

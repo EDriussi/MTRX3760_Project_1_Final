@@ -7,29 +7,15 @@
 
 #include "turtlebot3_lidar_processing/LidarNode.hpp"
 
-#include <vector>
 #include <cmath>
 #include <limits>
 #include <memory>
 #include <functional>
-#include <algorithm>
-
-//---Main----------------------------------------------------------------------
-
-int main( int argc, char * argv[] )
-{
-    rclcpp::init( argc, argv );
-    rclcpp::spin(std::make_shared<LidarNode>());
-    rclcpp::shutdown();
-
-    return 0;
-}
 
 //---LidarNode Implementation--------------------------------------------------
 
 LidarNode::LidarNode()
-    : Node("lidar_node"),
-    mWallTelemetry{0.0f, 0.0f, 0.0f} 
+    : Node("lidar_node")
 {
 
     // Best effort with a queue of the last 10 messages, used for both topics.
@@ -40,32 +26,31 @@ LidarNode::LidarNode()
     qos.history(rclcpp::HistoryPolicy::KeepLast);
     qos.best_effort();
 
-    subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>("scan",
-    qos, std::bind(&LidarNode::scan_callback, this, std::placeholders::_1));
+    subscription_ = create_subscription<sensor_msgs::msg::LaserScan>("scan",
+    qos, std::bind(&LidarNode::ScanCallback, this, std::placeholders::_1));
 
-    publisher_ = this->create_publisher<turtlebot3_lidar_processing::msg::Lidar>("/lidar", qos);
+    publisher_ = create_publisher<turtlebot3_lidar_processing::msg::Lidar>("/lidar", qos);
 
 }
 
 // Reduces the scan, converts the result to telemetry and publishes it, so one
 // message goes out on /lidar for every scan that comes in.
-void LidarNode::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+void LidarNode::ScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
-    RCLCPP_DEBUG(this->get_logger(), "Received message");
+    RCLCPP_DEBUG(get_logger(), "Received message");
 
-    std::vector<float> Rays = GetRequiredRays( msg->ranges, msg->angle_min, msg->angle_increment,
-                                                msg->range_min, msg->range_max );
-    
-    // The result is read back from mWallTelemetry below rather than from the return value
-    CalculateTelemetry( Rays );
+    const std::vector<float> Rays = GetRequiredRays( msg->ranges, msg->angle_min, msg->angle_increment,
+                                                      msg->range_min, msg->range_max );
+
+    const WallTelemetry Telemetry = CalculateTelemetry( Rays );
 
     auto message = turtlebot3_lidar_processing::msg::Lidar();
 
-    message.tilt = mWallTelemetry.mTiltAngle;
-    message.forward_wall_distance = mWallTelemetry.mDistanceToFrontWall;
-    message.right_wall_distance = mWallTelemetry.mDistanceToRightWall;
+    message.tilt = Telemetry.mTiltAngle;
+    message.forward_wall_distance = Telemetry.mDistanceToFrontWall;
+    message.right_wall_distance = Telemetry.mDistanceToRightWall;
 
-    RCLCPP_DEBUG(this->get_logger(), "Publishing: Tilt=%.2f, Right Wall Distance=%.2f, Forward Wall Distance=%.2f", message.tilt, message.right_wall_distance, message.forward_wall_distance);
+    RCLCPP_DEBUG(get_logger(), "Publishing: Tilt=%.2f, Right Wall Distance=%.2f, Forward Wall Distance=%.2f", message.tilt, message.right_wall_distance, message.forward_wall_distance);
     publisher_->publish(message);
 }
 
@@ -84,7 +69,7 @@ void LidarNode::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 // If nothing valid is in the RHS sector the distance is range_max and the bearing is
 // -90 degrees, which CalculateTelemetry turns into zero tilt.
 std::vector<float> LidarNode::GetRequiredRays( const std::vector<float>& ranges, float angle_min, float angle_increment,
-                                               float range_min, float range_max )
+                                               float range_min, float range_max ) const
 {
     // Angles in radians
     constexpr float ForwardAngle = 0.0f;                 // 0 degrees
@@ -92,10 +77,7 @@ std::vector<float> LidarNode::GetRequiredRays( const std::vector<float>& ranges,
     constexpr float RightSectorAngle = -1.1344640f;      // -65 degrees
     constexpr float RightSectorHalfWidth = 1.4835299f;   // +- 85 degrees
     constexpr float ClusterTolerance = 0.015f;           // m - range band that sets the bearing
-    // Bearing reported when the RHS sector is empty: -90 degrees. Despite its name
-    // this is a bearing, not a distance.
-    constexpr float DefaultRHSRayDistance = -1.5707963f;
-    constexpr int NumDesiredRays = 3;                    // forward, RHS distance, RHS bearing
+    constexpr float DefaultRHSBearing = -1.5707963f;     // -90 degrees, reported when the RHS sector is empty
 
     std::vector<float> Rays(NumDesiredRays);
 
@@ -110,7 +92,7 @@ std::vector<float> LidarNode::GetRequiredRays( const std::vector<float>& ranges,
 
     // Determine the forward ray: smallest raw ray in the forward window
     int FrontMinIndex = GetMinimumRayIndex( ranges, ForwardIndex, ForwardRaysNum, range_min, range_max );
-    Rays[0] = ( FrontMinIndex >= 0 ) ? ranges[FrontMinIndex] : range_max;
+    Rays[ForwardRayIndex] = ( FrontMinIndex >= 0 ) ? ranges[FrontMinIndex] : range_max;
 
     // Determine the RHS ray: smallest smoothed ray in the RHS sector
     std::vector<float> Smoothed = SmoothRays( ranges, range_min, range_max );
@@ -119,8 +101,8 @@ std::vector<float> LidarNode::GetRequiredRays( const std::vector<float>& ranges,
     // Ensure that if nothing is on the RHS, max range is reported
     if ( ClosestIndex < 0 )
     {
-        Rays[1] = range_max;
-        Rays[2] = DefaultRHSRayDistance;
+        Rays[RightDistanceIndex] = range_max;
+        Rays[RightBearingIndex] = DefaultRHSBearing;
         return Rays;
     }
 
@@ -157,15 +139,15 @@ std::vector<float> LidarNode::GetRequiredRays( const std::vector<float>& ranges,
         }
     }
 
-    Rays[1] = ClosestDistance;
-    Rays[2] = std::atan2( SumSin, SumCos );
+    Rays[RightDistanceIndex] = ClosestDistance;
+    Rays[RightBearingIndex] = std::atan2( SumSin, SumCos );
 
     return Rays;
 }
 
 // Averages each valid ray with its valid neighbours (wrapping around the scan).
 // Invalid rays stay invalid (infinity) so GetMinimumRayIndex skips them.
-std::vector<float> LidarNode::SmoothRays( const std::vector<float>& ranges, float range_min, float range_max )
+std::vector<float> LidarNode::SmoothRays( const std::vector<float>& ranges, float range_min, float range_max ) const
 {
     constexpr int SmoothHalfWidth = 2;    // rays either side
 
@@ -203,7 +185,7 @@ std::vector<float> LidarNode::SmoothRays( const std::vector<float>& ranges, floa
 
 // Returns the index of the smallest valid lidar ray from a search window of rays.
 // Filters out invalid rays ( out of range or not finite ).
-int LidarNode::GetMinimumRayIndex ( const std::vector<float>& ranges, int IndexNum, int WindowRays, float range_min, float range_max )
+int LidarNode::GetMinimumRayIndex ( const std::vector<float>& ranges, int IndexNum, int WindowRays, float range_min, float range_max ) const
 {
 
     // Starting at range_max means a ray must be closer than range_max to be chosen
@@ -250,26 +232,31 @@ int LidarNode::GetMinimumRayIndex ( const std::vector<float>& ranges, int IndexN
 
 // Calculates the distance and orientation of any RHS and front wall from the output
 // of GetRequiredRays. The Navigator negates the tilt to get its heading error.
-LidarNode::WallTelemetry LidarNode::CalculateTelemetry( const std::vector<float>& Ray )
+LidarNode::WallTelemetry LidarNode::CalculateTelemetry( const std::vector<float>& Rays ) const
 {
-    // Positions in the vector returned by GetRequiredRays
-    int constexpr ForwardRayIndex = 0;
-    int constexpr RightDistanceIndex = 1;
-    int constexpr RightBearingIndex = 2;
-    float constexpr NinetyDegrees = 1.5707963f;    // rad
+    constexpr float NinetyDegrees = 1.5707963f;    // rad
 
     // Find tilt of robot with respect to the wall: 0 when the closest wall point
     // is directly to the right (-90 deg), negative when heading toward the wall
-    float Tilt = -( Ray[RightBearingIndex] + NinetyDegrees );
-    float mTiltAngle = std::atan2( std::sin( Tilt ), std::cos( Tilt ));
+    const float Tilt = -( Rays[RightBearingIndex] + NinetyDegrees );
+
+    WallTelemetry Telemetry;
+    Telemetry.mTiltAngle = std::atan2( std::sin( Tilt ), std::cos( Tilt ));
 
     // Closest point is already the true perpendicular distance for a flat wall
-    float mDistanceToRightWall = Ray[RightDistanceIndex];
-    float mDistanceToFrontWall = Ray[ForwardRayIndex];
+    Telemetry.mDistanceToRightWall = Rays[RightDistanceIndex];
+    Telemetry.mDistanceToFrontWall = Rays[ForwardRayIndex];
 
-    mWallTelemetry.mTiltAngle = mTiltAngle;
-    mWallTelemetry.mDistanceToFrontWall = mDistanceToFrontWall;
-    mWallTelemetry.mDistanceToRightWall = mDistanceToRightWall;
+    return Telemetry;
+}
 
-    return mWallTelemetry;
+//---Main----------------------------------------------------------------------
+
+int main( int argc, char * argv[] )
+{
+    rclcpp::init( argc, argv );
+    rclcpp::spin(std::make_shared<LidarNode>());
+    rclcpp::shutdown();
+
+    return 0;
 }

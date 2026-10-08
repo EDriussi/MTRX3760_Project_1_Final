@@ -8,30 +8,23 @@
 //-----------------------------------------------------------------------------
 
 #include "navigator.hpp"
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 
-//---Helpers-------------------------------------------------------------------
-// wrapAngle - keeps an angle in [-pi, pi] so differences never jump by 2*pi
-// stateName - readable state names for the state change log
-namespace {
-    double wrapAngle(double a) {
-        return std::atan2(std::sin(a), std::cos(a));
-    }
-
-    const char* stateName(TB3State state) {
-        switch (state) {
-            case TB3State::WAIT_FOR_SCAN: return "WAIT_FOR_SCAN";
-            case TB3State::FOLLOW_WALL:   return "FOLLOW_WALL";
-            case TB3State::SEARCH_WALL:   return "SEARCH_WALL";
-        }
-        return "?";
-    }
+//---Navigator Implementation--------------------------------------------------
+double Navigator::wrapAngle(double angle) {
+    return std::atan2(std::sin(angle), std::cos(angle));
 }
 
-//---Navigator Implementation--------------------------------------------------
-Navigator::Navigator() {
-    mCurrentPose = {0, 0, 0};
-    mScanPose    = {0, 0, 0};
+const char* Navigator::stateName(TB3State state) {
+    const char* name = "?";
+    switch (state) {
+        case TB3State::WAIT_FOR_SCAN: name = "WAIT_FOR_SCAN"; break;
+        case TB3State::FOLLOW_WALL:   name = "FOLLOW_WALL";   break;
+        case TB3State::SEARCH_WALL:   name = "SEARCH_WALL";   break;
+    }
+    return name;
 }
 
 void Navigator::updatePose(const Pose& pose) {
@@ -60,7 +53,7 @@ void Navigator::estimateWall(double& distance, double& heading_error) const {
 
     // direction from robot to the wall point at scan time, in the odometry frame
     const double normal = mScanPose.yaw + scan_alpha - M_PI / 2.0;
-    
+
     // robot displacement since the scan
     const double dx = mCurrentPose.x - mScanPose.x;
     const double dy = mCurrentPose.y - mScanPose.y;
@@ -73,14 +66,14 @@ void Navigator::estimateWall(double& distance, double& heading_error) const {
 // Decided afresh every tick with no hysteresis, so a wall sitting right at
 // WALL_LOST_DISTANCE can alternate the state between ticks. rampCommand() keeps
 // the output continuous when that happens.
-TB3State Navigator::getState(double wall_distance) const {
+Navigator::TB3State Navigator::getState(double wall_distance) const {
+    TB3State state = TB3State::FOLLOW_WALL;
     if (!mHasInput) {
-        return TB3State::WAIT_FOR_SCAN;
+        state = TB3State::WAIT_FOR_SCAN;
+    } else if (wall_distance > WALL_LOST_DISTANCE) {
+        state = TB3State::SEARCH_WALL;
     }
-    if (wall_distance > WALL_LOST_DISTANCE) {
-        return TB3State::SEARCH_WALL;
-    }
-    return TB3State::FOLLOW_WALL;
+    return state;
 }
 
 // Assumes odometry reads (0, 0) where the robot starts. Odometry drift over a
@@ -163,7 +156,7 @@ CommandVelocity Navigator::navigate() {
 
             // slow down for obstacles and for sharp turns - the turn slowdown uses the
             // angular rate actually commanded last tick (after the ramp), not this tick's target
-            const double front_scale = std::clamp((mInput.front_distance - FRONT_STOP) / 
+            const double front_scale = std::clamp((mInput.front_distance - FRONT_STOP) /
                                                   (FRONT_SLOW - FRONT_STOP), 0.0, 1.0);
             const double turn_ratio = std::abs(mLastCmd.angular) / MAX_ANGULAR;
 

@@ -3,7 +3,8 @@
 ' Simplified UML class diagram for the navigation executable
 ' (turtlebot3_navigator).
 ' Association, inheritance and composition only; no members or functions.
-' WallFollowerInput is held by value by both NavigatorWrapper and Navigator.
+' WallFollowerInput is held by value by Navigator only. NavigatorWrapper builds
+' one as a local in its lidar callback, which is not a stored relationship.
 
 @startuml
 
@@ -27,7 +28,6 @@ class TimerBase
 Node <|-- NavigatorWrapper
 
 NavigatorWrapper *-- Navigator
-NavigatorWrapper *-- WallFollowerInput
 NavigatorWrapper *-- SubLidar
 NavigatorWrapper *-- SubOdometry
 NavigatorWrapper *-- PubTwistStamped
