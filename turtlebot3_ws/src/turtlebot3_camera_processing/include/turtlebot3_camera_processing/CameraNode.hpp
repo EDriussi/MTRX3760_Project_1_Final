@@ -24,12 +24,12 @@ class CameraNode : public rclcpp::Node
 
     private:
         // Publishes on /image
-        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_publisher_;
+        rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr mImagePublisher;
 
         // Receives on /camera/image_raw
-        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscriber_;
+        rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr mImageSubscriber;
 
-        void CameraCallback(const sensor_msgs::msg::Image::SharedPtr msg);
+        void CameraCallback(const sensor_msgs::msg::Image::SharedPtr aMsg);
 };
 
 #endif

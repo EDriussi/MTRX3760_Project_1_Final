@@ -33,31 +33,31 @@ class NavigatorWrapper : public rclcpp::Node {
 
     private:
         // passes each /lidar message to the navigator as a new reading
-        void lidarCallback(const turtlebot3_lidar_processing::msg::Lidar::SharedPtr msg);
+        void LidarCallback(const turtlebot3_lidar_processing::msg::Lidar::SharedPtr aMsg);
 
         // reduces each /odom message to an x, y, yaw pose for the navigator
-        void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+        void OdomCallback(const nav_msgs::msg::Odometry::SharedPtr aMsg);
 
         // 20 Hz control loop on the node clock (sim time in Gazebo - real time on the robot)
-        void updateCallback();
+        void UpdateCallback();
 
         // publishes one command (m/s, rad/s) on /nav_cmd_vel as a TwistStamped
-        void publishCmdVel(double linear, double angular);
+        void PublishCmdVel(double aLinear, double aAngular);
 
         // ROS interfaces
-        rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_pub_;
+        rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr mCmdVelPub;
 
-        rclcpp::Subscription<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr lidar_sub_;
+        rclcpp::Subscription<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr mLidarSub;
 
-        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+        rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr mOdomSub;
 
-        rclcpp::TimerBase::SharedPtr update_timer_;
+        rclcpp::TimerBase::SharedPtr mUpdateTimer;
 
         // logic and state
-        Navigator navigator_;
+        Navigator mNavigator;
 
-        // held by every callback while it touches navigator_
-        std::mutex data_mutex_;
+        // held by every callback while it touches mNavigator
+        std::mutex mDataMutex;
 };
 
 #endif
