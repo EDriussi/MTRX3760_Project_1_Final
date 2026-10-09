@@ -16,13 +16,13 @@ CameraNode::CameraNode()
 {
 
     // /image goes out with the default reliable QoS and a queue of 10
-    auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
+    auto Qos = rclcpp::QoS(rclcpp::KeepLast(10));
 
-    image_publisher_ = create_publisher<sensor_msgs::msg::Image>("/image", qos);
+    mImagePublisher = create_publisher<sensor_msgs::msg::Image>("/image", Qos);
 
     // Sensor data QoS is best effort with a short queue, so a slow callback
     // drops frames instead of falling behind the camera
-    image_subscriber_ = create_subscription<sensor_msgs::msg::Image>(
+    mImageSubscriber = create_subscription<sensor_msgs::msg::Image>(
         "/camera/image_raw",
         rclcpp::SensorDataQoS(),
         std::bind(&CameraNode::CameraCallback, this, std::placeholders::_1)
@@ -37,11 +37,11 @@ CameraNode::~CameraNode()
 }
 
 // Runs once per camera frame, so the INFO log prints a line for every frame
-void CameraNode::CameraCallback(const sensor_msgs::msg::Image::SharedPtr msg)
+void CameraNode::CameraCallback(const sensor_msgs::msg::Image::SharedPtr aMsg)
 {
     RCLCPP_INFO(get_logger(), "Received Camera Image");
 
-    image_publisher_->publish(*msg);
+    mImagePublisher->publish(*aMsg);
 }
 
 //---Main----------------------------------------------------------------------

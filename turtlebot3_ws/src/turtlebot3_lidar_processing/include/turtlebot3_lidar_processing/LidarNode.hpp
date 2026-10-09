@@ -52,35 +52,35 @@ class LidarNode : public rclcpp::Node {
 
         // Reduces a full lidar scan to the required values, in this order:
         // { forward distance, RHS closest distance, RHS closest bearing (rad) }
-        // The angle and range arguments are the fields of the same name in the
-        // LaserScan message.
-        std::vector<float> GetRequiredRays( const std::vector<float>& ranges,
-                                            float angle_min, float angle_increment,
-                                            float range_min, float range_max) const;
+        // The angle and range arguments are the LaserScan fields of the same name
+        // (aAngleMin is angle_min, and so on).
+        std::vector<float> GetRequiredRays( const std::vector<float>& aRanges,
+                                            float aAngleMin, float aAngleIncrement,
+                                            float aRangeMin, float aRangeMax) const;
 
         // Converts the output of GetRequiredRays into the robot's tilt, the distance
         // to the nearest forward wall and the distance to the nearest RHS wall.
-        WallTelemetry CalculateTelemetry( const std::vector<float>& Rays ) const;
+        WallTelemetry CalculateTelemetry( const std::vector<float>& aRays ) const;
 
-        // Finds the index of the smallest valid ray within WindowRays either side of
-        // IndexNum, wrapping around the scan. Returns -1 if no valid ray closer than
-        // range_max is found.
-        int GetMinimumRayIndex ( const std::vector<float>& ranges, int IndexNum,
-                                 int WindowRays, float range_min, float range_max ) const;
+        // Finds the index of the smallest valid ray within aWindowRays either side of
+        // aIndexNum, wrapping around the scan. Returns -1 if no valid ray closer than
+        // aRangeMax is found.
+        int GetMinimumRayIndex ( const std::vector<float>& aRanges, int aIndexNum,
+                                 int aWindowRays, float aRangeMin, float aRangeMax ) const;
 
         // Returns a copy of the scan in which each valid ray is averaged with its
         // valid neighbours to reduce noise. Invalid rays are returned as infinity.
-        std::vector<float> SmoothRays( const std::vector<float>& ranges,
-                                       float range_min, float range_max ) const;
+        std::vector<float> SmoothRays( const std::vector<float>& aRanges,
+                                       float aRangeMin, float aRangeMax ) const;
 
         // Processes and publishes each scan
-        void ScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+        void ScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr aMsg);
 
         // Publishes the processed telemetry on /lidar
-        rclcpp::Publisher<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr publisher_;
+        rclcpp::Publisher<turtlebot3_lidar_processing::msg::Lidar>::SharedPtr mPublisher;
 
         // Receives the raw scans on /scan
-        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_;
+        rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr mSubscription;
 
 };
 
